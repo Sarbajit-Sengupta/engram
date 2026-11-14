@@ -9,6 +9,10 @@ on:
 jobs:
   CLAssistant:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      statuses: write
     # Only run on PRs from forks or external contributors, not the owner
     if: github.actor != 'KaranamJyothirmayi'
     steps:

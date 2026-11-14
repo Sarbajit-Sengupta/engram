@@ -9,7 +9,7 @@ class MemoryGraph:
         self._path = graph_path
         if graph_path and Path(graph_path).exists():
             with open(graph_path, "rb") as f:
-                self._g: nx.DiGraph = pickle.load(f)
+                self._g: nx.DiGraph = pickle.load(f)  # nosec B301 — file written by engram itself, not from external input
         else:
             self._g = nx.DiGraph()
 
