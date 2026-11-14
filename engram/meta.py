@@ -55,7 +55,7 @@ class MetaStore:
             return []
         placeholders = ",".join("?" * len(ids))
         rows = self._conn.execute(
-            f"SELECT * FROM memories WHERE id IN ({placeholders})", ids
+            f"SELECT * FROM memories WHERE id IN ({placeholders})", ids  # nosec B608 — placeholders is "?,?,?" not user input
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -77,7 +77,7 @@ class MetaStore:
             return
         placeholders = ",".join("?" * len(ids))
         self._conn.execute(
-            f"DELETE FROM memories WHERE id IN ({placeholders})", ids
+            f"DELETE FROM memories WHERE id IN ({placeholders})", ids  # nosec B608 — placeholders is "?,?,?" not user input
         )
         self._conn.commit()
 
