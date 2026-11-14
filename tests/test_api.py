@@ -88,3 +88,55 @@ async def test_recall_isolates_by_dataset():
     await engram.remember("Paris is in France.", dataset="geography")
     results = await engram.recall("Marie Curie", datasets=["geography"])
     assert all(r["dataset"] == "geography" for r in results)
+
+
+@pytest.mark.parametrize("text", ["", "   \n\t"])
+async def test_remember_empty_text_does_not_create_memories(text):
+    await engram.remember(text, dataset="empty")
+    store = engram._get_store()
+    assert store._meta.get_all_in_dataset("empty") == []
+    assert store._meta.list_datasets() == []
+    assert await engram.recall("anything", datasets=["empty"]) == []
+
+
+async def test_remember_multiple_sentences_stores_each_once():
+    sentences = ["The sky is blue.", "Water freezes at zero degrees!", "Is the sun a star?"]
+    await engram.remember(" ".join(sentences), dataset="science")
+
+    store = engram._get_store()
+    rows = store._meta.get_all_in_dataset("science")
+    assert sorted(row["text"] for row in rows) == sorted(sentences)
+    assert len({row["id"] for row in rows}) == 3
+    results = await engram.recall("sky water sun", datasets=["science"])
+    assert {row["text"] for row in results} == set(sentences)
+
+
+async def test_recall_nonexistent_dataset_does_not_return_other_memories():
+    await engram.remember("The sky is blue.", dataset="science")
+    assert await engram.recall("The sky is blue.", datasets=["missing"]) == []
+
+
+async def test_prune_strong_memories_keeps_them_searchable():
+    await engram.remember("The sky is blue. Water is wet.", dataset="science")
+    store = engram._get_store()
+    before = store._meta.get_all_in_dataset("science")
+
+    assert await engram.prune("science", threshold=0.2) == 0
+
+    assert store._meta.get_all_in_dataset("science") == before
+    results = await engram.recall("sky water", datasets=["science"])
+    assert {row["text"] for row in results} == {row["text"] for row in before}
+
+
+async def test_forget_nonexistent_dataset_preserves_existing_memories():
+    await engram.remember("The sky is blue.", dataset="science")
+    await engram.forget("missing")
+    await engram.forget("missing")
+
+    results = await engram.recall("sky", datasets=["science"])
+    assert len(results) == 1
+    assert results[0]["text"] == "The sky is blue."
+
+
+async def test_prune_nonexistent_dataset_returns_zero():
+    assert await engram.prune("missing") == 0

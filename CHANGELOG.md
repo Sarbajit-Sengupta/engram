@@ -11,6 +11,8 @@ Types: `feat` · `fix` · `test` · `docs` · `chore`
 
 _PRs merged to `main` but not yet released._
 
+- test: cover empty input, multi-sentence storage, dataset isolation, forget and prune edge cases (#10)
+
 ---
 
 ## 0.1.0 — 2026-11-12
